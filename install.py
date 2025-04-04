@@ -5,8 +5,6 @@ import os
 import urllib.request
 import zipfile
 
-import py7zr
-
 # Helper functions
 def set_path(new_path):
     try:
@@ -133,8 +131,11 @@ def install_visual_studio(installer_path):
     command = [
         installer_path,
         "modify",
+        "--downloadThenInstall",
         "--path cache=" + os.getenv("TEMP"),
         "--add", "Microsoft.VisualStudio.Workload.NativeDesktop",
+        "--add", "Microsoft.VisualStudio.Workload.VCTools",
+        "--add", "Microsoft.VisualStudio.Workload.MSBuildTools",
         "--remove", "Microsoft.VisualStudio.Component.CMake",
         "--remove", "Microsoft.VisualStudio.Component.VC.CMake.Project",
         "--passive",
@@ -185,7 +186,7 @@ def install_cmake():
 
 def install_choco_dependencies():
     try:
-        url = "https://github.com/ros2/choco-packages/releases/tag/2022-03-15"
+        url = "https://github.com/ros2/choco-packages/releases/download/2022-03-15/"
 
         print("Installing Chocolatey dependencies...")
 
@@ -243,6 +244,7 @@ def install_python_packages():
         sys.exit(1)
 
 def install_xmllint():
+    import py7zr
     try:
         url = "https://www.zlatkovic.com/pub/libxml/64bit/"
         xmllint_path = r"C:\xmllint"
