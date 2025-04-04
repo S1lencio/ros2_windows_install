@@ -3,6 +3,7 @@ import sys
 import ctypes
 import os
 import urllib.request
+import zipfile
 
 # Helper functions
 def set_path(new_path):
@@ -36,6 +37,8 @@ def main():
     install_openssl()
     installer_path = download_visual_studio_installer()
     install_visual_studio(installer_path)
+    install_opencv()
+    install_cmake()
 
 def install_chocolatey():
     # Check if Chocolatey is already installed
@@ -111,13 +114,15 @@ def install_visual_studio(installer_path):
     # Command to install Visual Studio with the Desktop Development with C++ workload
     command = [
         installer_path,
+        "modify",
         "--path cache=" + os.getenv("TEMP"),
         "--add", "Microsoft.VisualStudio.Workload.NativeDesktop",
-        "--remove", "Microsoft.VisualStudio.Component.CMake"
+        "--remove", "Microsoft.VisualStudio.Component.CMake",
+        "--remove", "Microsoft.VisualStudio.Component.VC.CMake.Project",
+        "--passive",
         "--includeRecommended",
-        "--quiet",  # Silent install
-        "--norestart",  # Don't restart after install
-        "--wait"  # Wait until installation is complete
+        "--norestart",
+        "--force"
     ]
 
     # Run the installer command
@@ -125,6 +130,40 @@ def install_visual_studio(installer_path):
     subprocess.call(command)
     print("Visual Studio installation completed.")
 
+def install_opencv():
+    url = "https://github.com/ros2/ros2/releases/download/opencv-archives/opencv-3.4.6-vc16.VS2019.zip"
+
+    print(f"Downloading OpenCV from {url}...")
+
+    opencv_temp_path = os.path.join(os.getenv("TEMP"), "opencv.zip")
+    opencv_path = r"C:\opencv"
+
+    print(f"Downloaded OpenCV to {opencv_temp_path}")
+
+    urllib.request.urlretrieve(url, opencv_temp_path)
+
+    with zipfile.ZipFile(opencv_temp_path, 'r') as zip_ref:
+        zip_ref.extractall(opencv_path)
+
+    print(f"Extracted OpenCV to {opencv_path}")
+
+    subprocess.call(["setx", "/m", "OpenCV_DIR", opencv_path])
+    set_path(r"C:\opencv\x64\vc16\bin")
+
+    print("OpenCV installation completed.")
+
+def install_cmake():
+    try:
+        print("Installing CMake...")
+
+        # Install
+        subprocess.check_call(["choco", "install", "-y", "cmake"])
+
+        print("CMake installation complete.")
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to install CMake: {e}")
+        input()
+        sys.exit(1)
 
 # Run the installation function
 main()
