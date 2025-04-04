@@ -51,6 +51,7 @@ def main():
     install_python_packages()
     install_xmllint()
     install_qt5()
+    install_rqt()
 
 def install_chocolatey():
     # Check if Chocolatey is already installed
@@ -293,6 +294,20 @@ def install_qt5():
         print("Qt5 installation complete.")
     except subprocess.CalledProcessError as e:
         print(f"Failed to install Qt5: {e}")
+        input()
+        sys.exit(1)
+
+def install_rqt():
+    try:
+        print("Installing rqt...")
+
+        subprocess.check_call(["choco", "install", "-y", "graphviz"])
+
+        set_path(r"C:\Program Files\Graphviz\bin")
+
+        print("rqt installation complete.")
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to install rqt: {e}")
         input()
         sys.exit(1)
 
