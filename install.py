@@ -69,6 +69,7 @@ def install_chocolatey():
         print("Chocolatey installation complete.")
     except subprocess.CalledProcessError as e:
         print(f"Failed to install Chocolatey: {e}")
+        input()
         sys.exit(1)
 
 def install_cpp():
@@ -78,6 +79,7 @@ def install_cpp():
         print("Visual C++ Redistributables installation complete.")
     except subprocess.CalledProcessError as e:
         print(f"Failed to install Visual C++ Redistributables: {e}")
+        input()
         sys.exit(1)
 
 def install_openssl():
@@ -88,6 +90,7 @@ def install_openssl():
         print("OpenSSL installation complete.")
     except subprocess.CalledProcessError as e:
         print(f"Failed to install OpenSSL: {e}")
+        input()
         sys.exit(1)
 
 # Run the installation function
