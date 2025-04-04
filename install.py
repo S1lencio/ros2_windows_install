@@ -19,6 +19,9 @@ def is_admin():
         _admin = ctypes.windll.shell32.IsUserAnAdmin() != 0
     return _admin
 
+def run(cmd):
+    return subprocess.run(["powershell", "-Command", cmd], capture_output=True)
+
 def install_chocolatey():
     # Check if Chocolatey is already installed
     try:
@@ -28,18 +31,9 @@ def install_chocolatey():
     except subprocess.CalledProcessError:
         pass  # Chocolatey is not installed, proceed with installation
 
-    # Step 1: Run the PowerShell script to install Chocolatey
-    install_command = [
-        "powershell",
-        "-ExecutionPolicy", "Bypass",
-        "-NoProfile",
-        "-Command",
-        "[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))"
-    ]
-
     try:
         print("Installing Chocolatey...")
-        subprocess.check_call(install_command)
+        run("iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))")
         print("Chocolatey installation complete.")
     except subprocess.CalledProcessError as e:
         print(f"Failed to install Chocolatey: {e}")
@@ -47,3 +41,6 @@ def install_chocolatey():
 
 # Run the installation function
 main()
+
+# Wait for user input before closing the script
+input()
