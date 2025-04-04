@@ -1,5 +1,5 @@
 # Get Installer and import global functions
-iex ((New-Object System.Net.WebClient).DownloadString('https://github.com/scottcandy34/ros2_windows_install/raw/main/installer.ps1'))
+iex ((New-Object System.Net.WebClient).DownloadString('https://github.com/s1lencio/ros2_windows_install/raw/main/installer.ps1'))
 
 # Set version
 $Version = "jazzy"
@@ -123,9 +123,9 @@ function Standard-Install {
     Download-File -Uri "https://www.zlatkovic.com/pub/libxml/64bit/zlib-1.2.8-win32-x86_64.7z" -OutFile "zlib-1.2.8-win32-x86_64.7z"
 
     #Unpack all archives into e.g. C:\xmllint
-    & $SevenZipExe x "libxml2-2.9.3-win32-x86_64.7z" -o"$xmllintDir" -y
-    & $SevenZipExe x "iconv-1.14-win32-x86_64.7z" -o"$xmllintDir" -y
-    & $SevenZipExe x "zlib-1.2.8-win32-x86_64.7z" -o"$xmllintDir" -y
+    Start-Process -FilePath $SevenZipExe x "libxml2-2.9.3-win32-x86_64.7z" -o"$xmllintDir" -y
+    Start-Process -FilePath $SevenZipExe x "iconv-1.14-win32-x86_64.7z" -o"$xmllintDir" -y
+    Start-Process -FilePath $SevenZipExe x "zlib-1.2.8-win32-x86_64.7z" -o"$xmllintDir" -y
 
     #Add C:\xmllint\bin to the PATH.
     Set-Path -NewPath "$xmllintDir/bin"
