@@ -52,6 +52,7 @@ def main():
     install_xmllint()
     install_qt5()
     install_rqt()
+    install_ros2()
 
 def install_chocolatey():
     # Check if Chocolatey is already installed
@@ -308,6 +309,28 @@ def install_rqt():
         print("rqt installation complete.")
     except subprocess.CalledProcessError as e:
         print(f"Failed to install rqt: {e}")
+        input()
+        sys.exit(1)
+
+def install_ros2():
+    try:
+        url = "https://github.com/ros2/ros2/releases/download/release-jazzy-20241223/ros2-jazzy-20241223-windows-release-amd64.zip"
+
+        print("Downloading ROS2 from {url}...")
+
+        ros2_temp_path = os.path.join(os.getenv("TEMP"), "ros2.zip")
+        ros2_path = r"C:\dev\ros2_jazzy"
+
+        urllib.request.urlretrieve(url, ros2_temp_path)
+
+        print(f"Downloaded ROS2 to {ros2_temp_path}")
+
+        with zipfile.ZipFile(ros2_temp_path, 'r') as zip_ref:
+            zip_ref.extractall(ros2_path)
+
+        print("ROS2 installation complete.")
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to install ROS2: {e}")
         input()
         sys.exit(1)
 
