@@ -4,18 +4,26 @@ import ctypes
 import os
 import urllib.request
 import zipfile
+from multiprocessing.context import set_spawning_popen
+
+import py7zr
 
 # Helper functions
 def set_path(new_path):
-    powershell_command = f'''
-    $PATH = [System.Environment]::GetEnvironmentVariable('PATH', 'Machine')
-    if (-not($PATH.Contains("{new_path}"))) {{
-        [System.Environment]::SetEnvironmentVariable('PATH', $PATH + ";{new_path}", 'Machine')
-    }}
-    '''
+    try:
+        powershell_command = f'''
+        $PATH = [System.Environment]::GetEnvironmentVariable('PATH', 'Machine')
+        if (-not($PATH.Contains("{new_path}"))) {{
+            [System.Environment]::SetEnvironmentVariable('PATH', $PATH + ";{new_path}", 'Machine')
+        }}
+        '''
 
-    # Run the PowerShell command with subprocess
-    subprocess.call(["powershell", "-Command", powershell_command])
+        # Run the PowerShell command with subprocess
+        subprocess.check_call(["powershell", "-Command", powershell_command])
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to set PATH variable: {e}")
+        input()
+        sys.exit(1)
 
 def is_admin():
     return ctypes.windll.shell32.IsUserAnAdmin() == 1
@@ -46,7 +54,7 @@ def main():
 def install_chocolatey():
     # Check if Chocolatey is already installed
     try:
-        subprocess.check_call(["choco", "--version"])
+        subprocess.call(["choco", "--version"])
         print("Chocolatey is already installed.")
         return
     except FileNotFoundError:
@@ -64,6 +72,7 @@ def install_chocolatey():
         ]
 
         subprocess.check_call(install_command)
+
         print("Chocolatey installation complete.")
     except subprocess.CalledProcessError as e:
         print(f"Failed to install Chocolatey: {e}")
@@ -92,7 +101,7 @@ def install_openssl():
 
         # Set environment variable
         openssl_conf_path = r"C:\Program Files\OpenSSL-Win64\bin\openssl.cfg"
-        subprocess.call(["setx", "/m", "OPENSSL_CONF", openssl_conf_path])
+        subprocess.check_call(["setx", "/m", "OPENSSL_CONF", openssl_conf_path])
 
         # Set PATH
         set_path(r'C:\Program Files\OpenSSL-Win64\bin')
@@ -109,8 +118,11 @@ def download_visual_studio_installer():
 
     # Download the installer
     print(f"Downloading Visual Studio installer from {url}...")
+
     urllib.request.urlretrieve(url, installer_path)
+
     print(f"Downloaded Visual Studio installer to {installer_path}")
+
     return installer_path
 
 def install_visual_studio(installer_path):
@@ -130,7 +142,7 @@ def install_visual_studio(installer_path):
 
     # Run the installer command
     print("Installing Visual Studio...")
-    subprocess.call(command)
+    subprocess.check_call(command)
     print("Visual Studio installation completed.")
 
 def install_opencv():
@@ -138,7 +150,7 @@ def install_opencv():
 
     print(f"Downloading OpenCV from {url}...")
 
-    opencv_temp_path = os.path.join(os.getenv("TEMP"), "opencv.zip")
+    opencv_temp_path = os.path.join(os.getenv("TEMP"), "opencv-3.4.6-vc16.VS2019.zip")
     opencv_path = r"C:\opencv"
 
     print(f"Downloaded OpenCV to {opencv_temp_path}")
@@ -191,8 +203,8 @@ def install_choco_dependencies():
         subprocess.check_call(["choco", "install", "-y", "-s", os.getenv("TEMP"), "asio", "cunit", "eigen", "tinyxml2", "bullet"])
 
         print("Chocolatey dependencies installation complete.")
-    except subprocess.CalledProcessError as e:
-        print(f"Failed to install choco dependencies: {e}")
+    except:
+        print(f"Failed to install choco dependencies")
         input()
         sys.exit(1)
 
@@ -218,9 +230,51 @@ def install_python_packages():
                                "pycairo", "pydot", "pyparsing==2.4.7", "pytest", "pyyaml", "rosdistro"
                                ])
 
+        # Needs this to extract .7z files
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "-U", "py7zr"])
+
         print("Python packages installation complete.")
     except subprocess.CalledProcessError as e:
         print(f"Failed to install Python packages: {e}")
+        input()
+        sys.exit(1)
+
+def install_xmllint():
+    try:
+        url = "https://www.zlatkovic.com/pub/libxml/64bit/"
+        xmllint_path = r"C:\xmllint"
+
+        print("Installing xmllint...")
+
+        libxml2 = os.path.join(os.getenv("TEMP"), "libxml2-2.9.3-win32-x86_64.7z")
+        iconv = os.path.join(os.getenv("TEMP"), "iconv-1.14-win32-x86_64.7z")
+        zlib = os.path.join(os.getenv("TEMP"), "zlib-1.2.8-win32-x86_64.7z")
+
+        urllib.request.urlretrieve(url + "libxml2-2.9.3-win32-x86_64.7z", libxml2)
+        urllib.request.urlretrieve(url + "iconv-1.14-win32-x86_64.7z", iconv)
+        urllib.request.urlretrieve(url + "zlib-1.2.8-win32-x86_64.7z", zlib)
+
+        print(f"Downloaded xmllint dependencies to {os.getenv('TEMP')}")
+
+        print("Extracting libxml2...")
+        with py7zr.SevenZipFile(libxml2, mode='r') as archive:
+            archive.extractall(xmllint_path)
+
+        print("Extracting iconv...")
+        with py7zr.SevenZipFile(iconv, mode='r') as archive:
+            archive.extractall(xmllint_path)
+
+        print("Extracting zlib...")
+        with py7zr.SevenZipFile(zlib, mode='r') as archive:
+            archive.extractall(xmllint_path)
+
+        print("Extracted xmllint dependencies")
+
+        set_path(xmllint_path + r"\bin")
+
+        print("Xmllint installation complete.")
+    except:
+        print("Failed to download xmllint dependencies.")
         input()
         sys.exit(1)
 
