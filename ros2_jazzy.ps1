@@ -2,8 +2,8 @@
 iex ((New-Object System.Net.WebClient).DownloadString('https://github.com/scottcandy34/ros2_windows_install/raw/main/installer.ps1'))
 
 # Set version
-$Version = "humble"
-$Version_Title = "Humble"
+$Version = "jazzy"
+$Version_Title = "Jazzy"
 
 function Standard-Install {
     # Set Custom Chocolatey location
@@ -91,10 +91,6 @@ function Standard-Install {
             OutFile = 'eigen.3.3.4.nupkg'
         },
         @{
-            Uri = "$baseUri/tinyxml-usestl.2.6.2.nupkg"
-            OutFile = 'tinyxml-usestl.2.6.2.nupkg'
-        },
-        @{
             Uri = "$baseUri/tinyxml2.6.0.0.nupkg"
             OutFile = 'tinyxml2.6.0.0.nupkg'
         }
@@ -103,11 +99,36 @@ function Standard-Install {
     foreach ($file in $files) {
         Download-File @file
     }
-    choco install -y -s $DownloadDir asio cunit eigen tinyxml-usestl tinyxml2 bullet
+    choco install -y -s $DownloadDir asio cunit eigen tinyxml2 bullet
 
     py -3.8 -m pip install -U pip setuptools==59.6.0
-    py -3.8 -m pip install -U catkin_pkg cryptography empy importlib-metadata lark==1.1.1 lxml matplotlib netifaces numpy opencv-python PyQt5 pillow psutil pycairo pydot pyparsing==2.4.7 pyyaml rosdistro
+    py -3.8 -m pip install -U catkin_pkg cryptography empy importlib-metadata jsonschema lark==1.1.1 lxml matplotlib netifaces numpy opencv-python PyQt5 pillow psutil pycairo pydot pyparsing==2.4.7 pytest pyyaml rosdistro
     py -3.8 -m pip install -U colcon-common-extensions
+
+
+    # Install portable version of 7-zip to extract .7z archives
+    $SevenZipExe = "$env:TEMP\7zr.exe"
+
+    if (-not (Test-Path $SevenZipExe)) {
+        Download-File -Uri "https://www.7-zip.org/a/7zr.exe" -OutFile $SevenZipExe
+    }
+
+
+    # Install xmllint
+    $xmllintDir = "C:\xmllint"
+
+    #Download the 64 bit binary archives of libxml2 (and its dependencies iconv and zlib) from https://www.zlatkovic.com/projects/libxml/
+    Download-File -Uri "https://www.zlatkovic.com/pub/libxml/64bit/libxml2-2.9.3-win32-x86_64.7z" -OutFile "libxml2-2.9.3-win32-x86_64.7z"
+    Download-File -Uri "https://www.zlatkovic.com/pub/libxml/64bit/iconv-1.14-win32-x86_64.7z" -OutFile "iconv-1.14-win32-x86_64.7z"
+    Download-File -Uri "https://www.zlatkovic.com/pub/libxml/64bit/zlib-1.2.8-win32-x86_64.7z" -OutFile "zlib-1.2.8-win32-x86_64.7z"
+
+    #Unpack all archives into e.g. C:\xmllint
+    & $SevenZipExe x "libxml2-2.9.3-win32-x86_64.7z" -o"$xmllintDir" -y
+    & $SevenZipExe x "iconv-1.14-win32-x86_64.7z" -o"$xmllintDir" -y
+    & $SevenZipExe x "zlib-1.2.8-win32-x86_64.7z" -o"$xmllintDir" -y
+
+    #Add C:\xmllint\bin to the PATH.
+    Set-Path -NewPath "$xmllintDir/bin"
 
     # Install Qt5
     choco install -y aqt qtcreator
@@ -193,7 +214,7 @@ function Alternate-Install {
     # Install ROS
     $env:ChocolateyInstall = "c:\opt\chocolatey"
     choco source add -n=ros-win -s="https://aka.ms/ros/public" --priority=1
-    choco upgrade ros-humble-desktop -y --execution-timeout=0 -pre
+    choco upgrade ros-jazzy-desktop -y --execution-timeout=0 -pre
 
     Add_Links -Path "C:\opt\ros\$Version\x64\"
 }
@@ -220,7 +241,7 @@ function Uninstall-Ros {
     if (Test-Path -Path "C:\opt") {
         $ROS_START = "C:\opt\ros\$Version\x64\local_setup.ps1"
         $env:ChocolateyInstall = "c:\opt\chocolatey"
-        choco uninstall -y ros-humble-desktop --skipautouninstaller
+        choco uninstall -y ros-jazzy-desktop --skipautouninstaller
         Uninstall -Path "C:\opt\ros\$Version" -Title "ROS2 $Version_Title Alternate Build"
 
         $ROS_INSTALL_COUNT = (Get-ChildItem -Directory -Path $ROS_DIR | Measure-Object).Count
@@ -258,14 +279,14 @@ function Uninstall-Dep {
     $env:Path = "C:\dev\chocolatey\bin;" + $env:Path
     
     # Uninstall python packages
-    py -3.8 -m pip uninstall -y catkin_pkg cryptography empy importlib-metadata lark==1.1.1 lxml matplotlib netifaces numpy opencv-python PyQt5 pillow psutil pycairo pydot pyparsing==2.4.7 pyyaml rosdistro
+    py -3.8 -m pip uninstall -y catkin_pkg cryptography empy importlib-metadata jsonschema lark==1.1.1 lxml matplotlib netifaces numpy opencv-python PyQt5 pillow psutil pycairo pydot pyparsing==2.4.7 pytest pyyaml rosdistro
     py -3.8 -m pip uninstall -y pip setuptools==59.6.0
     py -3.8 -m pip uninstall -Y colcon-common-extensions
 
     # Uninstall Chocolaty packages
     ECHO Y | choco uninstall -y graphviz -n
     choco uninstall -y aqt qtcreator
-    choco uninstall -y asio cunit eigen tinyxml-usestl tinyxml2 bullet
+    choco uninstall -y asio cunit eigen tinyxml2 bullet
     ECHO Y | choco uninstall -y cmake
     choco uninstall -y visualstudio2019community
     choco uninstall -y openssl
