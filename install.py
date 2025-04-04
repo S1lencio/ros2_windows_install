@@ -2,6 +2,7 @@ import subprocess
 import sys
 import ctypes
 import os
+import winreg as reg
 
 def main():
     # Check if the script is run with admin privileges
@@ -9,18 +10,9 @@ def main():
         print("This script requires administrative privileges. Please run as administrator.")
         sys.exit(1)
 
-    # Install Chocolatey
     install_chocolatey()
-
-def is_admin():
-    try:
-        _admin = os.getuid() == 0
-    except AttributeError:
-        _admin = ctypes.windll.shell32.IsUserAnAdmin() != 0
-    return _admin
-
-def run(cmd):
-    return subprocess.run(["powershell", "-Command", cmd], capture_output=True)
+    install_cpp()
+    install_openssl()
 
 def install_chocolatey():
     # Check if Chocolatey is already installed
@@ -48,8 +40,56 @@ def install_chocolatey():
         print(f"Failed to install Chocolatey: {e}")
         sys.exit(1)
 
+def install_cpp():
+    try:
+        print("Installing Visual C++ Redistributables...")
+        subprocess.check_call(["choco", "install" "-y", "vcredist2013", "vcredist140"])
+        print("Visual C++ Redistributables installation complete.")
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to install Visual C++ Redistributables: {e}")
+        sys.exit(1)
+
+def install_openssl():
+    try:
+        print("Installing OpenSSL...")
+        subprocess.check_call(["choco", "install" "-y", "openssl", "--version 1.1.1.2100"])
+        set_path(r'C:\Program Files\OpenSSL-Win64\bin')
+        print("OpenSSL installation complete.")
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to install OpenSSL: {e}")
+        sys.exit(1)
+
+
 # Run the installation function
 main()
 
 # Wait for user input before closing the script
 input()
+
+
+
+# Helper functions
+def is_admin():
+    try:
+        _admin = os.getuid() == 0
+    except AttributeError:
+        _admin = ctypes.windll.shell32.IsUserAnAdmin() != 0
+    return _admin
+
+def set_path(new_path):
+    # Open the registry key for system-wide environment variables
+    key = reg.OpenKey(reg.HKEY_LOCAL_MACHINE, r"SYSTEM\CurrentControlSet\Control\Session Manager\Environment", 0, reg.KEY_WRITE)
+
+    # Get the current PATH
+    current_path, _ = reg.QueryValueEx(key, "Path")
+
+    # Add the new directory to the PATH if it's not already there
+    if new_path not in current_path:
+        new_path_value = current_path + ";" + new_path
+        reg.SetValueEx(key, "Path", 0, reg.REG_EXPAND_SZ, new_path_value)
+        print(f"Successfully added {new_path} to PATH.")
+    else:
+        print(f"{new_path} is already in the PATH.")
+
+    # Close the registry key
+    reg.CloseKey(key)
