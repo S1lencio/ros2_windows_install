@@ -4,6 +4,7 @@ import ctypes
 import os
 import winreg as reg
 
+# Main function
 def main():
     # Check if the script is run with admin privileges
     if not is_admin():
@@ -43,7 +44,7 @@ def install_chocolatey():
 def install_cpp():
     try:
         print("Installing Visual C++ Redistributables...")
-        subprocess.check_call(["choco", "install" "-y", "vcredist2013", "vcredist140"])
+        subprocess.check_call(["choco", "install", "-y", "vcredist2013", "vcredist140"])
         print("Visual C++ Redistributables installation complete.")
     except subprocess.CalledProcessError as e:
         print(f"Failed to install Visual C++ Redistributables: {e}")
@@ -52,20 +53,12 @@ def install_cpp():
 def install_openssl():
     try:
         print("Installing OpenSSL...")
-        subprocess.check_call(["choco", "install" "-y", "openssl", "--version 1.1.1.2100"])
+        subprocess.check_call(["choco", "install", "-y", "openssl", "--version 1.1.1.2100"])
         set_path(r'C:\Program Files\OpenSSL-Win64\bin')
         print("OpenSSL installation complete.")
     except subprocess.CalledProcessError as e:
         print(f"Failed to install OpenSSL: {e}")
         sys.exit(1)
-
-
-# Run the installation function
-main()
-
-# Wait for user input before closing the script
-input()
-
 
 
 # Helper functions
@@ -93,3 +86,9 @@ def set_path(new_path):
 
     # Close the registry key
     reg.CloseKey(key)
+
+# Run the installation function
+main()
+
+# Wait for user input before closing the script
+input()
