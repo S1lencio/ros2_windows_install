@@ -4,19 +4,42 @@ import ctypes
 import os
 import winreg as reg
 
+# Helper functions
+def set_path(new_path):
+    # Open the registry key for system-wide environment variables
+    key = reg.OpenKey(reg.HKEY_LOCAL_MACHINE, r"SYSTEM\CurrentControlSet\Control\Session Manager\Environment", 0, reg.KEY_WRITE)
+
+    # Get the current PATH
+    current_path, _ = reg.QueryValueEx(key, "Path")
+
+    # Add the new directory to the PATH if it's not already there
+    if new_path not in current_path:
+        new_path_value = current_path + ";" + new_path
+        reg.SetValueEx(key, "Path", 0, reg.REG_EXPAND_SZ, new_path_value)
+        print(f"Successfully added {new_path} to PATH.")
+    else:
+        print(f"{new_path} is already in the PATH.")
+
+    # Close the registry key
+    reg.CloseKey(key)
+
 def is_admin():
     try:
-        _admin = os.getuid() == 0
-    except AttributeError:
-        _admin = ctypes.windll.shell32.IsUserAnAdmin() != 0
-    return _admin
+        return ctypes.windll.shell32.IsUserAnAdmin() != 0
+    except:
+        return False
+
+def run_as_admin():
+    if not is_admin():
+        print("Not running as administrator. Trying to elevate...")
+        # Relaunch the script with elevated permissions
+        subprocess.run(["runas", "/user:Administrator", sys.executable] + sys.argv)
+        sys.exit()
 
 # Main function
 def main():
-    # Check if the script is run with admin privileges
-    if not is_admin():
-        print("This script requires administrative privileges. Please run as administrator.")
-        sys.exit(1)
+    # Escalate to admin if not already
+    run_as_admin()
 
     install_chocolatey()
     install_cpp()
@@ -66,26 +89,6 @@ def install_openssl():
     except subprocess.CalledProcessError as e:
         print(f"Failed to install OpenSSL: {e}")
         sys.exit(1)
-
-
-# Helper functions
-def set_path(new_path):
-    # Open the registry key for system-wide environment variables
-    key = reg.OpenKey(reg.HKEY_LOCAL_MACHINE, r"SYSTEM\CurrentControlSet\Control\Session Manager\Environment", 0, reg.KEY_WRITE)
-
-    # Get the current PATH
-    current_path, _ = reg.QueryValueEx(key, "Path")
-
-    # Add the new directory to the PATH if it's not already there
-    if new_path not in current_path:
-        new_path_value = current_path + ";" + new_path
-        reg.SetValueEx(key, "Path", 0, reg.REG_EXPAND_SZ, new_path_value)
-        print(f"Successfully added {new_path} to PATH.")
-    else:
-        print(f"{new_path} is already in the PATH.")
-
-    # Close the registry key
-    reg.CloseKey(key)
 
 # Run the installation function
 main()
