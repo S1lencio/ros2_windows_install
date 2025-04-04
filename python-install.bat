@@ -35,7 +35,7 @@ if not exist "%USERPROFILE%\Desktop\install.py" (
 
 :: Step 7: Run the install.py script as administrator
 echo Running the Python script as administrator...
-powershell Start-Process python -ArgumentList "$env:USERPROFILE\Desktop\install.py" -Verb RunAs
+powershell -Command "Start-Process python -ArgumentList '`"$env:USERPROFILE\Desktop\install.py`"' -Verb RunAs"
 
 :: End of script
 echo Script execution completed.
