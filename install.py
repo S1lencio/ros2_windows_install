@@ -28,7 +28,7 @@ def install_chocolatey():
         subprocess.check_call(["choco", "--version"])
         print("Chocolatey is already installed.")
         return
-    except subprocess.CalledProcessError:
+    except FileNotFoundError:
         pass  # Chocolatey is not installed, proceed with installation
 
     try:
