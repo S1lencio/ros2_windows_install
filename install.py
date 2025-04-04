@@ -4,6 +4,13 @@ import ctypes
 import os
 import winreg as reg
 
+def is_admin():
+    try:
+        _admin = os.getuid() == 0
+    except AttributeError:
+        _admin = ctypes.windll.shell32.IsUserAnAdmin() != 0
+    return _admin
+
 # Main function
 def main():
     # Check if the script is run with admin privileges
@@ -62,13 +69,6 @@ def install_openssl():
 
 
 # Helper functions
-def is_admin():
-    try:
-        _admin = os.getuid() == 0
-    except AttributeError:
-        _admin = ctypes.windll.shell32.IsUserAnAdmin() != 0
-    return _admin
-
 def set_path(new_path):
     # Open the registry key for system-wide environment variables
     key = reg.OpenKey(reg.HKEY_LOCAL_MACHINE, r"SYSTEM\CurrentControlSet\Control\Session Manager\Environment", 0, reg.KEY_WRITE)
