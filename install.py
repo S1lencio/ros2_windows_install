@@ -39,6 +39,7 @@ def main():
     install_visual_studio(installer_path)
     install_opencv()
     install_cmake()
+    install_choco_dependencies()
 
 def install_chocolatey():
     # Check if Chocolatey is already installed
@@ -164,6 +165,28 @@ def install_cmake():
         print(f"Failed to install CMake: {e}")
         input()
         sys.exit(1)
+
+def install_choco_dependencies():
+    try:
+        url = "https://github.com/ros2/choco-packages/releases/tag/2022-03-15"
+        asio_path = os.path.join(os.getenv("TEMP"), "asio.1.12.1.nupkg")
+        bullet_path = os.path.join(os.getenv("TEMP"), "bullet.3.17.nupkg")
+        cunit_path = os.path.join(os.getenv("TEMP"), "cunit.2.1.3.nupkg")
+        eigen_path = os.path.join(os.getenv("TEMP"), "eigen.3.3.4.nupkg")
+        tinyxml_path = os.path.join(os.getenv("TEMP"), "tinyxml2.6.0.0.nupkg")
+
+        urllib.request.urlretrieve(url + "asio.1.12.1.nupkg", asio_path)
+        urllib.request.urlretrieve(url + "bullet.3.17.nupkg", bullet_path)
+        urllib.request.urlretrieve(url + "cunit.2.1.3.nupkg", cunit_path)
+        urllib.request.urlretrieve(url + "eigen.3.3.4.nupkg", eigen_path)
+        urllib.request.urlretrieve(url + "tinyxml2.6.0.0.nupkg", tinyxml_path)
+
+        subprocess.check_call(["choco", "install", "-y", "-s", os.getenv("TEMP"), "asio", "cunit", "eigen", "tinyxml2", "bullet"])
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to install choco dependencies: {e}")
+        input()
+        sys.exit(1)
+
 
 # Run the installation function
 main()
