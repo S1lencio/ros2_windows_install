@@ -4,7 +4,6 @@ import ctypes
 import os
 import urllib.request
 import zipfile
-from multiprocessing.context import set_spawning_popen
 
 import py7zr
 
@@ -50,6 +49,8 @@ def main():
     install_choco_dependencies()
     upgrade_pip_setuptools()
     install_python_packages()
+    install_xmllint()
+    install_qt5()
 
 def install_chocolatey():
     # Check if Chocolatey is already installed
@@ -275,6 +276,23 @@ def install_xmllint():
         print("Xmllint installation complete.")
     except:
         print("Failed to download xmllint dependencies.")
+        input()
+        sys.exit(1)
+
+def install_qt5():
+    try:
+        print("Installing Qt5...")
+
+        subprocess.check_call(["choco", "install", "-y", "aqt", "qtcreator"])
+
+        subprocess.check_call(["aqt", "install-qt", "windows", "desktop", "5.12.12", "win64_msvc2017_64", "--modules ", "debug_info", "--output-dir", r"C:\Qt5"])
+
+        subprocess.check_call(["setx", "/m", "Qt5_DIR", r"C:\Qt\5.12.12\msvc2017_64"])
+        subprocess.check_call(["setx", "/m", "QT_QPA_PLATFORM_PLUGIN_PATH", r"C:\Qt\5.12.12\msvc2017_64\plugins\platforms"])
+
+        print("Qt5 installation complete.")
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to install Qt5: {e}")
         input()
         sys.exit(1)
 
