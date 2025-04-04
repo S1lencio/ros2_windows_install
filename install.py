@@ -40,6 +40,8 @@ def main():
     install_opencv()
     install_cmake()
     install_choco_dependencies()
+    upgrade_pip_setuptools()
+    install_python_packages()
 
 def install_chocolatey():
     # Check if Chocolatey is already installed
@@ -169,6 +171,9 @@ def install_cmake():
 def install_choco_dependencies():
     try:
         url = "https://github.com/ros2/choco-packages/releases/tag/2022-03-15"
+
+        print("Installing Chocolatey dependencies...")
+
         asio_path = os.path.join(os.getenv("TEMP"), "asio.1.12.1.nupkg")
         bullet_path = os.path.join(os.getenv("TEMP"), "bullet.3.17.nupkg")
         cunit_path = os.path.join(os.getenv("TEMP"), "cunit.2.1.3.nupkg")
@@ -181,12 +186,43 @@ def install_choco_dependencies():
         urllib.request.urlretrieve(url + "eigen.3.3.4.nupkg", eigen_path)
         urllib.request.urlretrieve(url + "tinyxml2.6.0.0.nupkg", tinyxml_path)
 
+        print(f"Downloaded dependencies to {os.getenv('TEMP')}")
+
         subprocess.check_call(["choco", "install", "-y", "-s", os.getenv("TEMP"), "asio", "cunit", "eigen", "tinyxml2", "bullet"])
+
+        print("Chocolatey dependencies installation complete.")
     except subprocess.CalledProcessError as e:
         print(f"Failed to install choco dependencies: {e}")
         input()
         sys.exit(1)
 
+def upgrade_pip_setuptools():
+    try:
+        print("Upgrading pip and setuptools...")
+
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "-U", "pip", "setuptools==59.6.0"])
+
+        print("pip and setuptools upgraded successfully.")
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to upgrade pip and setuptools: {e}")
+        input()
+        sys.exit(1)
+
+def install_python_packages():
+    try:
+        print("Installing Python packages...")
+
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "-U",
+                               "catkin_pkg", "cryptography", "empy", "importlib-metadata", "jsonschema", "lark==1.1.1",
+                               "lxml", "matplotlib", "netifaces", "numpy", "opencv-python", "PyQt5", "pillow", "psutil",
+                               "pycairo", "pydot", "pyparsing==2.4.7", "pytest", "pyyaml", "rosdistro"
+                               ])
+
+        print("Python packages installation complete.")
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to install Python packages: {e}")
+        input()
+        sys.exit(1)
 
 # Run the installation function
 main()
