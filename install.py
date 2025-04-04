@@ -33,7 +33,16 @@ def install_chocolatey():
 
     try:
         print("Installing Chocolatey...")
-        run("iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))")
+
+        install_command = [
+            "powershell",
+            "-ExecutionPolicy", "Bypass",
+            "-NoProfile",
+            "-Command",
+            "[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))"
+        ]
+
+        subprocess.check_call(install_command)
         print("Chocolatey installation complete.")
     except subprocess.CalledProcessError as e:
         print(f"Failed to install Chocolatey: {e}")
