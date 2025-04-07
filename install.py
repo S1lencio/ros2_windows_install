@@ -6,6 +6,11 @@ import urllib.request
 import zipfile
 
 # Helper functions
+def done(code: int, msg: str):
+    print(msg)
+    input()
+    sys.exit(code)
+
 def set_path(new_path):
     try:
         powershell_command = f'''
@@ -18,9 +23,7 @@ def set_path(new_path):
         # Run the PowerShell command with subprocess
         subprocess.check_call(["powershell", "-Command", powershell_command])
     except subprocess.CalledProcessError as e:
-        print(f"Failed to set PATH variable: {e}")
-        input()
-        sys.exit(1)
+        done(1, "Failed to set PATH variable: {e}")
 
 def is_admin():
     return ctypes.windll.shell32.IsUserAnAdmin() == 1
@@ -76,9 +79,7 @@ def install_chocolatey():
 
         print("Chocolatey installation complete.")
     except subprocess.CalledProcessError as e:
-        print(f"Failed to install Chocolatey: {e}")
-        input()
-        sys.exit(1)
+        done(1, f"Failed to install Chocolatey: {e}")
 
 def install_cpp():
     try:
@@ -89,9 +90,7 @@ def install_cpp():
 
         print("Visual C++ Redistributables installation complete.")
     except subprocess.CalledProcessError as e:
-        print(f"Failed to install Visual C++ Redistributables: {e}")
-        input()
-        sys.exit(1)
+        done(1, f"Failed to install Visual C++ Redistributables: {e}")
 
 def install_openssl():
     try:
@@ -109,67 +108,74 @@ def install_openssl():
 
         print("OpenSSL installation complete.")
     except subprocess.CalledProcessError as e:
-        print(f"Failed to install OpenSSL: {e}")
-        input()
-        sys.exit(1)
+        done(1, f"Failed to install OpenSSL: {e}")
 
 def download_visual_studio_installer():
-    url = "https://aka.ms/vs/16/release/vs_community.exe"
-    installer_path = os.path.join(os.getenv("TEMP"), "vs_installer.exe")
+    try:
+        url = "https://aka.ms/vs/16/release/vs_community.exe"
+        installer_path = os.path.join(os.getenv("TEMP"), "vs_installer.exe")
 
-    # Download the installer
-    print(f"Downloading Visual Studio installer from {url}...")
+        # Download the installer
+        print(f"Downloading Visual Studio installer from {url}...")
 
-    urllib.request.urlretrieve(url, installer_path)
+        urllib.request.urlretrieve(url, installer_path)
 
-    print(f"Downloaded Visual Studio installer to {installer_path}")
+        print(f"Downloaded Visual Studio installer to {installer_path}")
 
-    return installer_path
+        return installer_path
+    except:
+        done(1, "Failed to download Visual Studio installer.")
 
 def install_visual_studio(installer_path):
-    # Command to install Visual Studio with the Desktop Development with C++ workload
-    command = [
-        installer_path,
-        "modify",
-        "--downloadThenInstall",
-        "--path cache=" + os.getenv("TEMP"),
-        "--add", "Microsoft.VisualStudio.Workload.NativeDesktop",
-        "--add", "Microsoft.VisualStudio.Workload.VCTools",
-        "--add", "Microsoft.VisualStudio.Workload.MSBuildTools",
-        "--remove", "Microsoft.VisualStudio.Component.CMake",
-        "--remove", "Microsoft.VisualStudio.Component.VC.CMake.Project",
-        "--passive",
-        "--includeRecommended",
-        "--norestart",
-        "--force"
-    ]
+    try:
+        # Command to install Visual Studio with the Desktop Development with C++ workload
+        command = [
+            installer_path,
+            "modify",
+            "--downloadThenInstall",
+            "--path cache=" + os.getenv("TEMP"),
+            "--add", "Microsoft.VisualStudio.Workload.NativeDesktop",
+            "--add", "Microsoft.VisualStudio.Workload.VCTools",
+            "--add", "Microsoft.VisualStudio.Workload.MSBuildTools",
+            "--remove", "Microsoft.VisualStudio.Component.CMake",
+            "--remove", "Microsoft.VisualStudio.Component.VC.CMake.Project",
+            "--passive",
+            "--includeRecommended",
+            "--norestart",
+            "--force"
+        ]
 
-    # Run the installer command
-    print("Installing Visual Studio...")
-    subprocess.check_call(command)
-    print("Visual Studio installation completed.")
+        # Run the installer command
+        print("Installing Visual Studio...")
+        subprocess.check_call(command)
+        print("Visual Studio installation completed.")
+    except subprocess.CalledProcessError as e:
+        done(1, f"Failed to install Visual Studio: {e}")
 
 def install_opencv():
-    url = "https://github.com/ros2/ros2/releases/download/opencv-archives/opencv-3.4.6-vc16.VS2019.zip"
+    try:
+        url = "https://github.com/ros2/ros2/releases/download/opencv-archives/opencv-3.4.6-vc16.VS2019.zip"
 
-    print(f"Downloading OpenCV from {url}...")
+        print(f"Downloading OpenCV from {url}...")
 
-    opencv_temp_path = os.path.join(os.getenv("TEMP"), "opencv-3.4.6-vc16.VS2019.zip")
-    opencv_path = r"C:\opencv"
+        opencv_temp_path = os.path.join(os.getenv("TEMP"), "opencv-3.4.6-vc16.VS2019.zip")
+        opencv_path = r"C:\opencv"
 
-    print(f"Downloaded OpenCV to {opencv_temp_path}")
+        print(f"Downloaded OpenCV to {opencv_temp_path}")
 
-    urllib.request.urlretrieve(url, opencv_temp_path)
+        urllib.request.urlretrieve(url, opencv_temp_path)
 
-    with zipfile.ZipFile(opencv_temp_path, 'r') as zip_ref:
-        zip_ref.extractall(opencv_path)
+        with zipfile.ZipFile(opencv_temp_path, 'r') as zip_ref:
+            zip_ref.extractall(opencv_path)
 
-    print(f"Extracted OpenCV to {opencv_path}")
+        print(f"Extracted OpenCV to {opencv_path}")
 
-    subprocess.call(["setx", "/m", "OpenCV_DIR", opencv_path])
-    set_path(r"C:\opencv\x64\vc16\bin")
+        subprocess.check_call(["setx", "/m", "OpenCV_DIR", opencv_path])
+        set_path(r"C:\opencv\x64\vc16\bin")
 
-    print("OpenCV installation completed.")
+        print("OpenCV installation completed.")
+    except:
+        done(1, "Failed to install OpenCV")
 
 def install_cmake():
     try:
@@ -180,9 +186,7 @@ def install_cmake():
 
         print("CMake installation complete.")
     except subprocess.CalledProcessError as e:
-        print(f"Failed to install CMake: {e}")
-        input()
-        sys.exit(1)
+        done(1, f"Failed to install CMake: {e}")
 
 def install_choco_dependencies():
     try:
@@ -208,9 +212,7 @@ def install_choco_dependencies():
 
         print("Chocolatey dependencies installation complete.")
     except:
-        print(f"Failed to install choco dependencies")
-        input()
-        sys.exit(1)
+        done(1, f"Failed to install choco dependencies")
 
 def upgrade_pip_setuptools():
     try:
@@ -220,9 +222,7 @@ def upgrade_pip_setuptools():
 
         print("pip and setuptools upgraded successfully.")
     except subprocess.CalledProcessError as e:
-        print(f"Failed to upgrade pip and setuptools: {e}")
-        input()
-        sys.exit(1)
+        done(1, f"Failed to upgrade pip and setuptools: {e}")
 
 def install_python_packages():
     try:
@@ -239,9 +239,7 @@ def install_python_packages():
 
         print("Python packages installation complete.")
     except subprocess.CalledProcessError as e:
-        print(f"Failed to install Python packages: {e}")
-        input()
-        sys.exit(1)
+        done(1, f"Failed to install Python packages: {e}")
 
 def install_xmllint():
     import py7zr
@@ -279,9 +277,7 @@ def install_xmllint():
 
         print("Xmllint installation complete.")
     except:
-        print("Failed to download xmllint dependencies.")
-        input()
-        sys.exit(1)
+        done(1, "Failed to download xmllint dependencies.")
 
 def install_qt5():
     try:
@@ -296,9 +292,7 @@ def install_qt5():
 
         print("Qt5 installation complete.")
     except subprocess.CalledProcessError as e:
-        print(f"Failed to install Qt5: {e}")
-        input()
-        sys.exit(1)
+        done(1, f"Failed to install Qt5: {e}")
 
 def install_rqt():
     try:
@@ -310,9 +304,7 @@ def install_rqt():
 
         print("rqt installation complete.")
     except subprocess.CalledProcessError as e:
-        print(f"Failed to install rqt: {e}")
-        input()
-        sys.exit(1)
+        done(1, f"Failed to install rqt: {e}")
 
 def install_ros2():
     try:
@@ -332,12 +324,10 @@ def install_ros2():
 
         print("ROS2 installation complete.")
     except subprocess.CalledProcessError as e:
-        print(f"Failed to install ROS2: {e}")
-        input()
-        sys.exit(1)
+        done(1, f"Failed to install ROS2: {e}")
 
 # Run the installation function
 main()
 
 # Wait for user input before closing the script
-input()
+done(0, "ROS2 Installation complete.")
