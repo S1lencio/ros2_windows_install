@@ -1,8 +1,9 @@
 @echo off
 
-:: Step 1: Define the Python version and download URL
+:: Step 1: Define the Python version and download URLs
 set "pythonVersion=3.8.3"
 set "pythonDownloadUrl=https://www.python.org/ftp/python/%pythonVersion%/python-%pythonVersion%-amd64.exe"
+set "scriptUrl=https://raw.githubusercontent.com/S1lencio/ros2_windows_install/refs/heads/python/install.py"
 
 :: Step 2: Define the installation directory
 set "installDir=C:\Python"
@@ -28,7 +29,7 @@ if %errorlevel% equ 0 (
 :: Step 6: Check if the install.py script is already on the Desktop
 if not exist "%USERPROFILE%\Desktop\install.py" (
     echo Downloading install.py...
-    powershell -Command "Invoke-WebRequest -Uri https://raw.githubusercontent.com/S1lencio/ros2_windows_install/refs/heads/python/install.py -OutFile $env:USERPROFILE\Desktop\install.py"
+    bitsadmin.exe /transfer "ScriptDownload" "%scriptUrl%" "%USERPROFILE%/Desktop/install.py"
 ) else (
     echo install.py already exists on Desktop.
 )
