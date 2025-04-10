@@ -40,8 +40,6 @@ def download_file(url, dest_path):
         with open(dest_path, 'wb') as f:
             for chunk in response.iter_content(chunk_size=8192):
                 f.write(chunk)
-
-        print(f"Downloaded file to {dest_path}")
     except requests.exceptions.RequestException as e:
         print(f"Error downloading file: {e}")
 
@@ -51,7 +49,7 @@ def main():
     run_as_admin()
 
     upgrade_pip_setuptools()
-    install_requests_package()
+    install_installer_packages()
     install_chocolatey()
     install_cpp()
     install_openssl()
@@ -66,15 +64,18 @@ def main():
     install_rqt()
     install_ros2()
 
-def install_requests_package():
+def install_installer_packages():
     try:
         print()
-        print("Installing requests package...")
+        print("Installing packages needed for installer...")
 
-        # Needs this for requests
+        # Needs this for web downloads
         subprocess.check_call([sys.executable, "-m", "pip", "install", "-U", "requests"])
 
-        print("Requests package installation complete.")
+        # Needs this for .7z files
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "-U", "pyunpack"])
+
+        print("Packages installation complete.")
     except subprocess.CalledProcessError as e:
         done(1, f"Failed to install requests: {e}")
 
@@ -163,8 +164,8 @@ def install_visual_studio(installer_path):
             "--passive",
             "--norestart",
             "--force",
+            "--theme", "dark",
             "--add", "Microsoft.VisualStudio.Workload.NativeDesktop",
-            "--add", "Microsoft.VisualStudio.Workload.VCTools", # C++ build tools needed for py7zr package
             "--remove", "Microsoft.VisualStudio.Component.CMake",
             "--remove", "Microsoft.VisualStudio.Component.VC.CMake.Project",
         ]
@@ -264,15 +265,12 @@ def install_python_packages():
                                "pycairo", "pydot", "pyparsing==2.4.7", "pytest", "pyyaml", "rosdistro"
                                ])
 
-        # Needs this to extract .7z files
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "-U", "py7zr"])
-
         print("Python packages installation complete.")
     except subprocess.CalledProcessError as e:
         done(1, f"Failed to install Python packages: {e}")
 
 def install_xmllint():
-    import py7zr
+    from pyunpack import Archive
     try:
         url = "https://www.zlatkovic.com/pub/libxml/64bit/"
         xmllint_path = r"C:\xmllint"
@@ -291,16 +289,10 @@ def install_xmllint():
         print(f"Downloaded xmllint dependencies to {os.getenv('TEMP')}")
 
         print("Extracting libxml2...")
-        with py7zr.SevenZipFile(libxml2, mode='r') as archive:
-            archive.extractall(xmllint_path)
 
-        print("Extracting iconv...")
-        with py7zr.SevenZipFile(iconv, mode='r') as archive:
-            archive.extractall(xmllint_path)
-
-        print("Extracting zlib...")
-        with py7zr.SevenZipFile(zlib, mode='r') as archive:
-            archive.extractall(xmllint_path)
+        Archive(libxml2).extractall(xmllint_path)
+        Archive(iconv).extractall(xmllint_path)
+        Archive(zlib).extractall(xmllint_path)
 
         print("Extracted xmllint dependencies")
 
