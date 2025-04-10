@@ -130,7 +130,6 @@ def install_visual_studio(installer_path):
         # Command to install Visual Studio with the Desktop Development with C++ workload
         command = [
             installer_path,
-            "modify",
             "install",
             "--passive",
             "--norestart",
