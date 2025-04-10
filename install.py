@@ -2,7 +2,6 @@ import subprocess
 import sys
 import ctypes
 import os
-import urllib.request
 import zipfile
 
 # Helper functions
@@ -30,11 +29,29 @@ def run_as_admin():
         subprocess.run(["runas", "/user:Administrator", sys.executable] + sys.argv)
         sys.exit()
 
+def download_file(url, dest_path):
+    import requests
+    try:
+        # Send a GET request to the URL
+        response = requests.get(url, stream=True, verify=True)  # verify=True checks SSL certificates
+        response.raise_for_status()  # Check if the request was successful (status code 200)
+
+        # Write the content to the destination path
+        with open(dest_path, 'wb') as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                f.write(chunk)
+
+        print(f"Downloaded file to {dest_path}")
+    except requests.exceptions.RequestException as e:
+        print(f"Error downloading file: {e}")
+
 # Main function
 def main():
     # Escalate to admin if not already
     run_as_admin()
 
+    upgrade_pip_setuptools()
+    install_requests_package()
     install_chocolatey()
     install_cpp()
     install_openssl()
@@ -43,12 +60,23 @@ def main():
     install_opencv()
     install_cmake()
     install_choco_dependencies()
-    upgrade_pip_setuptools()
     install_python_packages()
     install_xmllint()
     install_qt5()
     install_rqt()
     install_ros2()
+
+def install_requests_package():
+    try:
+        print()
+        print("Installing requests package...")
+
+        # Needs this for requests
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "-U", "requests"])
+
+        print("Requests package installation complete.")
+    except subprocess.CalledProcessError as e:
+        done(1, f"Failed to install requests: {e}")
 
 def install_chocolatey():
     # Check if Chocolatey is already installed
@@ -117,13 +145,13 @@ def download_visual_studio_installer():
         print()
         print(f"Downloading Visual Studio installer from {url}...")
 
-        urllib.request.urlretrieve(url, installer_path)
+        download_file(url, installer_path)
 
         print(f"Downloaded Visual Studio installer to {installer_path}")
 
         return installer_path
-    except:
-        done(1, "Failed to download Visual Studio installer.")
+    except Exception as e:
+        done(1, f"Failed to download Visual Studio installer: {e}")
 
 def install_visual_studio(installer_path):
     try:
@@ -135,31 +163,8 @@ def install_visual_studio(installer_path):
             "--passive",
             "--norestart",
             "--force",
-            "--add", "Microsoft.VisualStudio.Component.CoreEditor",
-            "--add", "Microsoft.VisualStudio.Workload.CoreEditor",
-            "--add", "Microsoft.VisualStudio.Component.NuGet",
-            "--add", "Microsoft.VisualStudio.Component.Roslyn.Compiler",
-            "--add", "Microsoft.VisualStudio.Component.Roslyn.LanguageServices",
-            "--add", "Microsoft.VisualStudio.ComponentGroup.WebToolsExtensions",
-            "--add", "Microsoft.VisualStudio.Component.TypeScript.4.3",
-            "--add", "Microsoft.VisualStudio.Component.JavaScript.TypeScript",
-            "--add", "Microsoft.Component.MSBuild",
-            "--add", "Microsoft.VisualStudio.Component.TextTemplating",
-            "--add", "Microsoft.VisualStudio.Component.Debugger.JustInTime",
-            "--add", "Component.Microsoft.VisualStudio.LiveShare",
-            "--add", "Microsoft.VisualStudio.Component.IntelliCode",
-            "--add", "Microsoft.VisualStudio.Component.VC.CoreIde",
-            "--add", "Microsoft.VisualStudio.Component.VC.Tools.x86.x64",
-            "--add", "Microsoft.VisualStudio.Component.Graphics.Tools",
-            "--add", "Microsoft.VisualStudio.Component.VC.DiagnosticTools",
-            "--add", "Microsoft.VisualStudio.Component.Windows10SDK.19041",
-            "--add", "Microsoft.VisualStudio.Component.VC.Redist.14.Latest",
-            "--add", "Microsoft.VisualStudio.ComponentGroup.NativeDesktop.Core",
-            "--add", "Microsoft.VisualStudio.Component.VC.ATL",
-            "--add", "Microsoft.VisualStudio.Component.VC.TestAdapterForBoostTest",
-            "--add", "Microsoft.VisualStudio.Component.VC.TestAdapterForGoogleTest",
-            "--add", "Microsoft.VisualStudio.Component.VC.ASAN",
             "--add", "Microsoft.VisualStudio.Workload.NativeDesktop",
+            "--add", "Microsoft.VisualStudio.Workload.VCTools", # C++ build tools needed for py7zr package
             "--remove", "Microsoft.VisualStudio.Component.CMake",
             "--remove", "Microsoft.VisualStudio.Component.VC.CMake.Project",
         ]
@@ -182,9 +187,9 @@ def install_opencv():
         opencv_temp_path = os.path.join(os.getenv("TEMP"), "opencv-3.4.6-vc16.VS2019.zip")
         opencv_path = r"C:\opencv"
 
-        print(f"Downloaded OpenCV to {opencv_temp_path}")
+        download_file(url, opencv_temp_path)
 
-        urllib.request.urlretrieve(url, opencv_temp_path)
+        print(f"Downloaded OpenCV to {opencv_temp_path}")
 
         with zipfile.ZipFile(opencv_temp_path, 'r') as zip_ref:
             zip_ref.extractall(opencv_path)
@@ -195,8 +200,8 @@ def install_opencv():
         set_path(r"C:\opencv\x64\vc16\bin")
 
         print("OpenCV installation completed.")
-    except:
-        done(1, "Failed to install OpenCV")
+    except Exception as e:
+        done(1, f"Failed to install OpenCV: {e}")
 
 def install_cmake():
     try:
@@ -223,19 +228,19 @@ def install_choco_dependencies():
         eigen_path = os.path.join(os.getenv("TEMP"), "eigen.3.3.4.nupkg")
         tinyxml_path = os.path.join(os.getenv("TEMP"), "tinyxml2.6.0.0.nupkg")
 
-        urllib.request.urlretrieve(url + "asio.1.12.1.nupkg", asio_path)
-        urllib.request.urlretrieve(url + "bullet.3.17.nupkg", bullet_path)
-        urllib.request.urlretrieve(url + "cunit.2.1.3.nupkg", cunit_path)
-        urllib.request.urlretrieve(url + "eigen.3.3.4.nupkg", eigen_path)
-        urllib.request.urlretrieve(url + "tinyxml2.6.0.0.nupkg", tinyxml_path)
+        download_file(url + "asio.1.12.1.nupkg", asio_path)
+        download_file(url + "bullet.3.17.nupkg", bullet_path)
+        download_file(url + "cunit.2.1.3.nupkg", cunit_path)
+        download_file(url + "eigen.3.3.4.nupkg", eigen_path)
+        download_file(url + "tinyxml2.6.0.0.nupkg", tinyxml_path)
 
         print(f"Downloaded dependencies to {os.getenv('TEMP')}")
 
         subprocess.check_call([choco, "install", "-y", "-s", os.getenv("TEMP"), "asio", "cunit", "eigen", "tinyxml2", "bullet"])
 
         print("Chocolatey dependencies installation complete.")
-    except:
-        done(1, f"Failed to install choco dependencies")
+    except Exception as e:
+        done(1, f"Failed to install choco dependencies: {e}")
 
 def upgrade_pip_setuptools():
     try:
@@ -279,9 +284,9 @@ def install_xmllint():
         iconv = os.path.join(os.getenv("TEMP"), "iconv-1.14-win32-x86_64.7z")
         zlib = os.path.join(os.getenv("TEMP"), "zlib-1.2.8-win32-x86_64.7z")
 
-        urllib.request.urlretrieve(url + "libxml2-2.9.3-win32-x86_64.7z", libxml2)
-        urllib.request.urlretrieve(url + "iconv-1.14-win32-x86_64.7z", iconv)
-        urllib.request.urlretrieve(url + "zlib-1.2.8-win32-x86_64.7z", zlib)
+        download_file(url + "libxml2-2.9.3-win32-x86_64.7z", libxml2)
+        download_file(url + "iconv-1.14-win32-x86_64.7z", iconv)
+        download_file(url + "zlib-1.2.8-win32-x86_64.7z", zlib)
 
         print(f"Downloaded xmllint dependencies to {os.getenv('TEMP')}")
 
@@ -302,8 +307,8 @@ def install_xmllint():
         set_path(xmllint_path + r"\bin")
 
         print("Xmllint installation complete.")
-    except:
-        done(1, "Failed to download xmllint dependencies.")
+    except Exception as e:
+        done(1, f"Failed to download xmllint dependencies: {e}")
 
 def install_qt5():
     try:
@@ -344,7 +349,7 @@ def install_ros2():
         ros2_temp_path = os.path.join(os.getenv("TEMP"), "ros2.zip")
         ros2_path = r"C:\dev\ros2_jazzy"
 
-        urllib.request.urlretrieve(url, ros2_temp_path)
+        download_file(url, ros2_temp_path)
 
         print(f"Downloaded ROS2 to {ros2_temp_path}")
 
