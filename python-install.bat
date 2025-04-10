@@ -17,7 +17,7 @@ if %errorlevel% equ 0 (
     curl -L -o "%TEMP%\python-installer.exe" "%pythonDownloadUrl%"
 
     echo Installing Python...
-    "%TEMP%\python-installer.exe" /quiet InstallAllUsers=1 PrependPath=1 /wait
+    "%TEMP%\python-installer.exe" /quiet InstallAllUsers=1 PrependPath=1 TargetDir="C:\Python38" /wait
 
     :: Clean up the installer
     del "%TEMP%\python-installer.exe" /f /q
