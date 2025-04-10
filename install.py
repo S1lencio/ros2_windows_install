@@ -11,6 +11,7 @@ def done(code: int, msg: str):
     sys.exit(code)
 
 choco = r"C:\ProgramData\chocolatey\bin\choco.exe"
+temp = os.getenv("TEMP")
 
 def set_path(new_path):
     try:
@@ -40,6 +41,8 @@ def download_file(url, dest_path):
         with open(dest_path, 'wb') as f:
             for chunk in response.iter_content(chunk_size=8192):
                 f.write(chunk)
+
+        print(f"Downloaded file to {dest_path}")
     except requests.exceptions.RequestException as e:
         print(f"Error downloading file: {e}")
 
@@ -71,9 +74,6 @@ def install_installer_packages():
 
         # Needs this for web downloads
         subprocess.check_call([sys.executable, "-m", "pip", "install", "-U", "requests"])
-
-        # Needs this for .7z files
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "-U", "pyunpack"])
 
         print("Packages installation complete.")
     except subprocess.CalledProcessError as e:
@@ -140,7 +140,7 @@ def install_openssl():
 def download_visual_studio_installer():
     try:
         url = "https://aka.ms/vs/16/release/vs_community.exe"
-        installer_path = os.path.join(os.getenv("TEMP"), "vs_installer.exe")
+        installer_path = os.path.join(temp, "vs_installer.exe")
 
         # Download the installer
         print()
@@ -185,7 +185,7 @@ def install_opencv():
         print()
         print(f"Downloading OpenCV from {url}...")
 
-        opencv_temp_path = os.path.join(os.getenv("TEMP"), "opencv-3.4.6-vc16.VS2019.zip")
+        opencv_temp_path = os.path.join(temp, "opencv-3.4.6-vc16.VS2019.zip")
         opencv_path = r"C:\opencv"
 
         download_file(url, opencv_temp_path)
@@ -223,11 +223,11 @@ def install_choco_dependencies():
         print()
         print("Installing Chocolatey dependencies...")
 
-        asio_path = os.path.join(os.getenv("TEMP"), "asio.1.12.1.nupkg")
-        bullet_path = os.path.join(os.getenv("TEMP"), "bullet.3.17.nupkg")
-        cunit_path = os.path.join(os.getenv("TEMP"), "cunit.2.1.3.nupkg")
-        eigen_path = os.path.join(os.getenv("TEMP"), "eigen.3.3.4.nupkg")
-        tinyxml_path = os.path.join(os.getenv("TEMP"), "tinyxml2.6.0.0.nupkg")
+        asio_path = os.path.join(temp, "asio.1.12.1.nupkg")
+        bullet_path = os.path.join(temp, "bullet.3.17.nupkg")
+        cunit_path = os.path.join(temp, "cunit.2.1.3.nupkg")
+        eigen_path = os.path.join(temp, "eigen.3.3.4.nupkg")
+        tinyxml_path = os.path.join(temp, "tinyxml2.6.0.0.nupkg")
 
         download_file(url + "asio.1.12.1.nupkg", asio_path)
         download_file(url + "bullet.3.17.nupkg", bullet_path)
@@ -237,7 +237,7 @@ def install_choco_dependencies():
 
         print(f"Downloaded dependencies to {os.getenv('TEMP')}")
 
-        subprocess.check_call([choco, "install", "-y", "-s", os.getenv("TEMP"), "asio", "cunit", "eigen", "tinyxml2", "bullet"])
+        subprocess.check_call([choco, "install", "-y", "-s", temp, "asio", "cunit", "eigen", "tinyxml2", "bullet"])
 
         print("Chocolatey dependencies installation complete.")
     except Exception as e:
@@ -270,17 +270,22 @@ def install_python_packages():
         done(1, f"Failed to install Python packages: {e}")
 
 def install_xmllint():
-    from pyunpack import Archive
     try:
         url = "https://www.zlatkovic.com/pub/libxml/64bit/"
+        url_7zr = "https://www.7-zip.org/a/7zr.exe"
+
         xmllint_path = r"C:\xmllint"
+        xmllint_7z_path = os.path.join(temp, "7zr.exe")
 
         print()
         print("Installing xmllint...")
 
-        libxml2 = os.path.join(os.getenv("TEMP"), "libxml2-2.9.3-win32-x86_64.7z")
-        iconv = os.path.join(os.getenv("TEMP"), "iconv-1.14-win32-x86_64.7z")
-        zlib = os.path.join(os.getenv("TEMP"), "zlib-1.2.8-win32-x86_64.7z")
+        print('7-zip is required. Downloading console executable...')
+        download_file(url_7zr, xmllint_7z_path)
+
+        libxml2 = os.path.join(temp, "libxml2-2.9.3-win32-x86_64.7z")
+        iconv = os.path.join(temp, "iconv-1.14-win32-x86_64.7z")
+        zlib = os.path.join(temp, "zlib-1.2.8-win32-x86_64.7z")
 
         download_file(url + "libxml2-2.9.3-win32-x86_64.7z", libxml2)
         download_file(url + "iconv-1.14-win32-x86_64.7z", iconv)
@@ -288,11 +293,15 @@ def install_xmllint():
 
         print(f"Downloaded xmllint dependencies to {os.getenv('TEMP')}")
 
-        print("Extracting libxml2...")
+        if not os.path.exists(xmllint_path):
+            os.makedirs(xmllint_path)
 
-        Archive(libxml2).extractall(xmllint_path)
-        Archive(iconv).extractall(xmllint_path)
-        Archive(zlib).extractall(xmllint_path)
+        print("Extracting libxml2...")
+        subprocess.check_call([xmllint_7z_path, "x", libxml2, "-o" + xmllint_path])
+        print("Extracting iconv...")
+        subprocess.check_call([xmllint_7z_path, "x", iconv, "-o" + xmllint_path])
+        print("Extracting zlib...")
+        subprocess.check_call([xmllint_7z_path, "x", zlib, "-o" + xmllint_path])
 
         print("Extracted xmllint dependencies")
 
@@ -309,7 +318,7 @@ def install_qt5():
 
         subprocess.check_call([choco, "install", "-y", "aqt", "qtcreator"])
 
-        subprocess.check_call(["aqt", "install-qt", "windows", "desktop", "5.12.12", "win64_msvc2017_64", "--modules ", "debug_info", "--output-dir", r"C:\Qt5"])
+        subprocess.check_call(["aqt", "install-qt", "windows", "desktop", "5.12.12", "win64_msvc2017_64", "--modules", "debug_info", "--output-dir", r"C:\Qt5"])
 
         subprocess.check_call(["setx", "/m", "Qt5_DIR", r"C:\Qt\5.12.12\msvc2017_64"])
         subprocess.check_call(["setx", "/m", "QT_QPA_PLATFORM_PLUGIN_PATH", r"C:\Qt\5.12.12\msvc2017_64\plugins\platforms"])
@@ -338,7 +347,7 @@ def install_ros2():
         print()
         print(f"Downloading ROS2 from {url}...")
 
-        ros2_temp_path = os.path.join(os.getenv("TEMP"), "ros2.zip")
+        ros2_temp_path = os.path.join(temp, "ros2.zip")
         ros2_path = r"C:\dev\ros2_jazzy"
 
         download_file(url, ros2_temp_path)
