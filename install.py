@@ -16,8 +16,16 @@ temp = os.getenv("TEMP")
 
 def set_path(new_path):
     try:
-        if new_path not in os.environ["PATH"]:
-            os.environ["PATH"] += f";{new_path}"
+        powershell_command = f'''
+        $PATH = [System.Environment]::GetEnvironmentVariable('PATH', 'Machine')
+        if (-not($PATH.Contains("{new_path}"))) {{
+            [System.Environment]::SetEnvironmentVariable('PATH', $PATH + ";{new_path}", 'Machine')
+        }}
+        '''
+
+        # Run the PowerShell command with subprocess
+        subprocess.check_call(["powershell", "-Command", powershell_command])
+        print(f"Added {new_path} to PATH variable.")
     except subprocess.CalledProcessError as e:
         done(1, "Failed to set PATH variable: {e}")
 
