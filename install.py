@@ -131,6 +131,7 @@ def install_visual_studio(installer_path):
         command = [
             installer_path,
             "install",
+            "--wait",
             "--passive",
             "--norestart",
             "--force",
