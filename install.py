@@ -60,6 +60,7 @@ def install_chocolatey():
         pass  # Chocolatey is not installed, proceed with installation
 
     try:
+        print()
         print("Installing Chocolatey...")
 
         install_command = [
@@ -78,6 +79,7 @@ def install_chocolatey():
 
 def install_cpp():
     try:
+        print()
         print("Installing Visual C++ Redistributables...")
 
         # Install
@@ -89,6 +91,7 @@ def install_cpp():
 
 def install_openssl():
     try:
+        print()
         print("Installing OpenSSL...")
 
         # Install
@@ -111,6 +114,7 @@ def download_visual_studio_installer():
         installer_path = os.path.join(os.getenv("TEMP"), "vs_installer.exe")
 
         # Download the installer
+        print()
         print(f"Downloading Visual Studio installer from {url}...")
 
         urllib.request.urlretrieve(url, installer_path)
@@ -127,6 +131,7 @@ def install_visual_studio(installer_path):
         command = [
             installer_path,
             "modify",
+            "install",
             "--passive",
             "--norestart",
             "--force",
@@ -160,6 +165,7 @@ def install_visual_studio(installer_path):
         ]
 
         # Run the installer command
+        print()
         print("Installing Visual Studio...")
         subprocess.check_call(command)
         print("Visual Studio installation completed.")
@@ -170,6 +176,7 @@ def install_opencv():
     try:
         url = "https://github.com/ros2/ros2/releases/download/opencv-archives/opencv-3.4.6-vc16.VS2019.zip"
 
+        print()
         print(f"Downloading OpenCV from {url}...")
 
         opencv_temp_path = os.path.join(os.getenv("TEMP"), "opencv-3.4.6-vc16.VS2019.zip")
@@ -193,6 +200,7 @@ def install_opencv():
 
 def install_cmake():
     try:
+        print()
         print("Installing CMake...")
 
         # Install
@@ -206,6 +214,7 @@ def install_choco_dependencies():
     try:
         url = "https://github.com/ros2/choco-packages/releases/download/2022-03-15/"
 
+        print()
         print("Installing Chocolatey dependencies...")
 
         asio_path = os.path.join(os.getenv("TEMP"), "asio.1.12.1.nupkg")
@@ -230,6 +239,7 @@ def install_choco_dependencies():
 
 def upgrade_pip_setuptools():
     try:
+        print()
         print("Upgrading pip and setuptools...")
 
         subprocess.check_call([sys.executable, "-m", "pip", "install", "-U", "pip", "setuptools==59.6.0"])
@@ -240,6 +250,7 @@ def upgrade_pip_setuptools():
 
 def install_python_packages():
     try:
+        print()
         print("Installing Python packages...")
 
         subprocess.check_call([sys.executable, "-m", "pip", "install", "-U",
@@ -261,6 +272,7 @@ def install_xmllint():
         url = "https://www.zlatkovic.com/pub/libxml/64bit/"
         xmllint_path = r"C:\xmllint"
 
+        print()
         print("Installing xmllint...")
 
         libxml2 = os.path.join(os.getenv("TEMP"), "libxml2-2.9.3-win32-x86_64.7z")
@@ -295,6 +307,7 @@ def install_xmllint():
 
 def install_qt5():
     try:
+        print()
         print("Installing Qt5...")
 
         subprocess.check_call([choco, "install", "-y", "aqt", "qtcreator"])
@@ -310,6 +323,7 @@ def install_qt5():
 
 def install_rqt():
     try:
+        print()
         print("Installing rqt...")
 
         subprocess.check_call([choco, "install", "-y", "graphviz"])
@@ -324,7 +338,8 @@ def install_ros2():
     try:
         url = "https://github.com/ros2/ros2/releases/download/release-jazzy-20241223/ros2-jazzy-20241223-windows-release-amd64.zip"
 
-        print("Downloading ROS2 from {url}...")
+        print()
+        print(f"Downloading ROS2 from {url}...")
 
         ros2_temp_path = os.path.join(os.getenv("TEMP"), "ros2.zip")
         ros2_path = r"C:\dev\ros2_jazzy"
