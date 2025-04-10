@@ -1,3 +1,4 @@
+import shutil
 import subprocess
 import sys
 import ctypes
@@ -318,7 +319,9 @@ def install_qt5():
 
         subprocess.check_call([choco, "install", "-y", "aqt", "qtcreator"])
 
-        subprocess.check_call(["aqt", "install-qt", "windows", "desktop", "5.12.12", "win64_msvc2017_64", "--modules", "debug_info", "--output-dir", r"C:\Qt5"])
+        aqt = r"C:\ProgramData\chocolatey\bin\aqt.exe"
+
+        subprocess.check_call([aqt, "install-qt", "windows", "desktop", "5.12.12", "win64_msvc2017_64", "--modules", "debug_info", "--outputdir", r"C:\Qt5"])
 
         subprocess.check_call(["setx", "/m", "Qt5_DIR", r"C:\Qt\5.12.12\msvc2017_64"])
         subprocess.check_call(["setx", "/m", "QT_QPA_PLATFORM_PLUGIN_PATH", r"C:\Qt\5.12.12\msvc2017_64\plugins\platforms"])
