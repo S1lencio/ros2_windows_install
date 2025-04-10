@@ -377,5 +377,4 @@ def install_ros2():
 # Run the installation function
 main()
 
-# Wait for user input before closing the script
-done(0, "ROS2 Installation complete.")
+print("ROS2 was installed successfully.")
