@@ -33,7 +33,7 @@ if not exist "%USERPROFILE%\Desktop\install.py" (
 
 :: Run the install.py script
 echo Running the Python script...
-"C:\Program Files\Python38\python.exe" "%USERPROFILE%\Desktop\install.py"
+"C:\Python38\python.exe" "%USERPROFILE%\Desktop\install.py"
 
 :: End of script
 echo Script execution completed.
