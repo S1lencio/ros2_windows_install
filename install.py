@@ -358,10 +358,20 @@ def install_ros2():
         print(f"Downloaded ROS2 to {ros2_temp_path}")
 
         with zipfile.ZipFile(ros2_temp_path, 'r') as zip_ref:
-            zip_ref.extractall(ros2_path)
+            zip_ref.extractall(temp)
+
+        print("Extracted ROS2 ZIP file.")
+
+        if not os.path.exists(ros2_path):
+            os.makedirs(ros2_path)
+            print(f"Created directory: {ros2_path}")
+
+        extracted_folder = os.path.join(temp, 'ros2-windows')
+        for file in os.listdir(extracted_folder):
+            shutil.move(os.path.join(extracted_folder, file), ros2_path)
 
         print("ROS2 installation complete.")
-    except subprocess.CalledProcessError as e:
+    except Exception as e:
         done(1, f"Failed to install ROS2: {e}")
 
 # Run the installation function
