@@ -11,17 +11,12 @@ def done(code: int, msg: str):
     input()
     sys.exit(code)
 
+choco = r"C:\ProgramData\chocolatey\bin\choco.exe"
+
 def set_path(new_path):
     try:
-        powershell_command = f'''
-        $PATH = [System.Environment]::GetEnvironmentVariable('PATH', 'Machine')
-        if (-not($PATH.Contains("{new_path}"))) {{
-            [System.Environment]::SetEnvironmentVariable('PATH', $PATH + ";{new_path}", 'Machine')
-        }}
-        '''
-
-        # Run the PowerShell command with subprocess
-        subprocess.check_call(["powershell", "-Command", powershell_command])
+        if new_path not in os.environ["PATH"]:
+            os.environ["PATH"] += f";{new_path}"
     except subprocess.CalledProcessError as e:
         done(1, "Failed to set PATH variable: {e}")
 
@@ -58,7 +53,7 @@ def main():
 def install_chocolatey():
     # Check if Chocolatey is already installed
     try:
-        subprocess.call(["choco", "--version"])
+        subprocess.call([choco, "--version"])
         print("Chocolatey is already installed.")
         return
     except FileNotFoundError:
@@ -86,7 +81,7 @@ def install_cpp():
         print("Installing Visual C++ Redistributables...")
 
         # Install
-        subprocess.check_call(["choco", "install", "-y", "vcredist2013", "vcredist140"])
+        subprocess.check_call([choco, "install", "-y", "vcredist2013", "vcredist140"])
 
         print("Visual C++ Redistributables installation complete.")
     except subprocess.CalledProcessError as e:
@@ -97,7 +92,7 @@ def install_openssl():
         print("Installing OpenSSL...")
 
         # Install
-        subprocess.check_call(["choco", "install", "-y", "openssl", "--version 1.1.1.2100"])
+        subprocess.check_call([choco, "install", "-y", "openssl", "--version 1.1.1.2100"])
 
         # Set environment variable
         openssl_conf_path = r"C:\Program Files\OpenSSL-Win64\bin\openssl.cfg"
@@ -201,7 +196,7 @@ def install_cmake():
         print("Installing CMake...")
 
         # Install
-        subprocess.check_call(["choco", "install", "-y", "cmake"])
+        subprocess.check_call([choco, "install", "-y", "cmake"])
 
         print("CMake installation complete.")
     except subprocess.CalledProcessError as e:
@@ -227,7 +222,7 @@ def install_choco_dependencies():
 
         print(f"Downloaded dependencies to {os.getenv('TEMP')}")
 
-        subprocess.check_call(["choco", "install", "-y", "-s", os.getenv("TEMP"), "asio", "cunit", "eigen", "tinyxml2", "bullet"])
+        subprocess.check_call([choco, "install", "-y", "-s", os.getenv("TEMP"), "asio", "cunit", "eigen", "tinyxml2", "bullet"])
 
         print("Chocolatey dependencies installation complete.")
     except:
@@ -302,7 +297,7 @@ def install_qt5():
     try:
         print("Installing Qt5...")
 
-        subprocess.check_call(["choco", "install", "-y", "aqt", "qtcreator"])
+        subprocess.check_call([choco, "install", "-y", "aqt", "qtcreator"])
 
         subprocess.check_call(["aqt", "install-qt", "windows", "desktop", "5.12.12", "win64_msvc2017_64", "--modules ", "debug_info", "--output-dir", r"C:\Qt5"])
 
@@ -317,7 +312,7 @@ def install_rqt():
     try:
         print("Installing rqt...")
 
-        subprocess.check_call(["choco", "install", "-y", "graphviz"])
+        subprocess.check_call([choco, "install", "-y", "graphviz"])
 
         set_path(r"C:\Program Files\Graphviz\bin")
 
